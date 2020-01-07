@@ -1,20 +1,17 @@
 //+------------------------------------------------------------------+
-//|                                                      Example.mq5 |
-//|                        Copyright 2020, MetaQuotes Software Corp. |
-//|                                             https://www.mql5.com
- 
-// ES NECESARIO HABILITAR EL AUTOMATED TRADING EN OPCIONES Y CUANDO  |
-// CORRAS EL PROGRAMA                                                |
+//|                                                  Modo1Probar.mq5 |
+//|                        Copyright 2019, MetaQuotes Software Corp. |
+//|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
-#property copyright "Copyright 2020, MetaQuotes Software Corp."
+#property copyright "Copyright 2019, MetaQuotes Software Corp."
 #property link      "https://www.mql5.com"
 #property version   "1.00"
+//--- input parameters
+input int      TakeProfit=15;
+input int      StopLoss=15;
+input int      volume=1;
 
 #include <Trade\Trade.mqh>
-//--- input parameters
-input int      TakeProfit=30;
-input int      StopLoss=30;
-input double   volume=0.01;
 
 double Ask;
 double Bid;
@@ -164,6 +161,9 @@ string GetOrderType(long type)
   updateBidAsk();
   //Modo 1
   if(modo=="modo1"){
+  
+  updateBidAsk();
+  
     if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_TP&&secondTicketType!=ORDER_REASON_TP){
   Alert("BUY & TP ", trade.RequestActionDescription());
   trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
@@ -182,14 +182,14 @@ string GetOrderType(long type)
   }
   };
 
-  
+  //NO FUNCTIONA EL PREVIOUS!!!
   if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_TP&&secondTicketType==ORDER_REASON_TP
-  &&PreviousorderType==ORDER_TYPE_SELL){
+  &&PreviousorderType==ORDER_TYPE_BUY){
   Alert("BUY & 2XTP");
   trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
   }
   if(orderType==ORDER_TYPE_BUY&&lastTicketType==ORDER_REASON_TP&&secondTicketType==ORDER_REASON_TP
-  &&PreviousorderType==ORDER_TYPE_BUY){
+  &&PreviousorderType==ORDER_TYPE_SELL){
    Alert("SELL & 2XTP");
   trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
   }
@@ -198,3 +198,37 @@ string GetOrderType(long type)
   //Alert(EnumToString(lastTicketType), " " , EnumToString(secondTicketType));
   }
   
+//+------------------------------------------------------------------+
+//| Tester function                                                  |
+//+------------------------------------------------------------------+
+double OnTester()
+  {
+//---
+   double ret=0.0;
+//---
+
+//---
+   return(ret);
+  }
+//+------------------------------------------------------------------+
+//| TesterInit function                                              |
+//+------------------------------------------------------------------+
+void OnTesterInit()
+  {
+//---
+      updateBidAsk();
+   HistorySelect(0,TimeCurrent());
+   initialHistory=HistoryOrdersTotal();
+   lastTicket=HistoryOrderGetTicket(initialHistory-1);
+   secondlastTicket=HistoryOrderGetTicket(initialHistory-3);
+   
+   trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+  }
+//+------------------------------------------------------------------+
+
+void OnTesterDeinit()
+  {
+//---
+   
+  }
+//+------------------------------------------------------------------+

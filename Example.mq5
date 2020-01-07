@@ -45,10 +45,7 @@ void OnTick()
 //+------------------------------------------------------------------+
 void OnInit()
   {
-   Alert(HistoryOrdersTotal());
-   Alert(OrdersTotal());
-   Alert(HistoryDealsTotal());
-   Alert("Posiciones: ", PositionsTotal());
+
    for(int i=0; i<PositionsTotal(); i++)
      {
       long tick= PositionGetTicket(i);
@@ -57,10 +54,12 @@ void OnInit()
          ENUM_POSITION_PROPERTY_DOUBLE price_pos=PositionGetDouble(POSITION_PRICE_OPEN);
          ENUM_POSITION_TYPE type_pos=PositionGetInteger(POSITION_TYPE,tick);
        //  Alert(price_pos);
-         Alert(GetOrderType(EnumToString(type_pos)));
         }
      }
-
+      if(PositionsTotal()==0){
+    trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+   }
+   
 
   }
 //+------------------------------------------------------------------+
