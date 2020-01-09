@@ -167,24 +167,23 @@ string GetOrderType(long type)
   if(modo=="modo1"){
     if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_TP&&secondTicketType!=ORDER_REASON_TP){
   Alert("BUY & TP ", trade.RequestActionDescription());
-   placeBuyOrder();
-   }
+  placeSellOrder();
+  }
   if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_SL){
   Alert("BUY & SL ", trade.RequestActionDescription());
-  placeSellOrder();
+  placeBuyOrder();
   }
   if(orderType==ORDER_TYPE_BUY&&lastTicketType==ORDER_REASON_TP&&secondTicketType!=ORDER_REASON_TP){
   Alert("SELL & TP ", trade.RequestActionDescription());
-  placeSellOrder();
+   placeBuyOrder();
   }
   if(orderType==ORDER_TYPE_BUY&&lastTicketType==ORDER_REASON_SL){
   Alert("SELL & SL ", trade.RequestActionDescription());
-    placeBuyOrder();
-   }
+  placeSellOrder();
+    }
   };
 
   //Maybe puedo sacar el previous order type igual q el second ticket type
- 
  if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_TP&&secondTicketType==ORDER_REASON_TP
   &&PreviousorderType==ORDER_TYPE_SELL){
   Alert("BUY & 2XTP");
@@ -210,8 +209,8 @@ string GetOrderType(long type)
   //Alert(EnumToString(lastTicketType), " " , EnumToString(secondTicketType));
   }
   
- 
-  void placeBuyOrder(){
+  
+   void placeBuyOrder(){
 int err=0;
 int c = 0;
 int NumberOfTries=5;
@@ -232,8 +231,10 @@ break;
 else
 
 {
+
 Alert("Error: ", err);
-if(err==4 || err==137 ||err==146 || err==136 || err==138) //Busy errors
+
+if(err==4 || err==137 ||err==146 || err==136|| err==138) //Busy errors
 
 {
 
@@ -279,7 +280,6 @@ break;
 else
 
 {
-Alert("Error: ", err);
 
 if(err==4 || err==137 ||err==146 || err==136|| err==138) //Busy errors
 
