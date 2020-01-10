@@ -217,8 +217,10 @@ int NumberOfTries=5;
 
  for(c = 0 ; c < NumberOfTries ; c++){
   updateBidAsk();
-   trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
-   err=GetLastError();
+  if(PositionsTotal()==0){
+    trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+  }
+    err=GetLastError();
 
 if(err==0)
 
@@ -266,10 +268,12 @@ int NumberOfTries=5;
 
  for(c = 0 ; c < NumberOfTries ; c++){
   updateBidAsk();
- trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
+  if(PositionsTotal()==0){
+   trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
+  }
    err=GetLastError();
 
-if(err==0)
+if((err==4 || err==137 ||err==146 || err==136|| err==138)&&(PositionsTotal()==0))
 
 {
 
@@ -281,7 +285,7 @@ else
 
 {
 
-if(err==4 || err==137 ||err==146 || err==136|| err==138) //Busy errors
+if((err==4 || err==137 ||err==146 || err==136|| err==138)&&(PositionsTotal()==0)) //Busy errors
 
 {
 
