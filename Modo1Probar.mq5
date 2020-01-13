@@ -57,6 +57,9 @@ string findType(ulong ticket){
 int OnInit()
   {
 //---
+   if(GetLastError()>0){
+   Alert("Error: ", GetLastError());
+   }
    HistorySelect(0,TimeCurrent());
    initialHistory=HistoryOrdersTotal();
    
@@ -168,8 +171,10 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
     double tp=((result.price)-(TakeProfit*_Point));
     
     Alert("Type: ",EnumToString(orderType));
-    
-      trade.PositionModify(ticket, sl, tp);
+    if(request.sl==0.00000&&request.tp==0.00000){
+          trade.PositionModify(ticket, sl, tp);
+    }
+
 
     
       } 
@@ -184,7 +189,9 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
     
     Alert("Type: ",EnumToString(orderType));
     
+        if(request.sl==0.00000&&request.tp==0.00000){
     trade.PositionModify(ticket, sl, tp);
+         }
       } 
    
 
@@ -293,14 +300,7 @@ double OnTester()
 void OnTesterInit()
   {
 //---
-      updateBidAsk();
-   HistorySelect(0,TimeCurrent());
-   initialHistory=HistoryOrdersTotal();
-   lastTicket=HistoryOrderGetTicket(initialHistory-1);
-   secondlastTicket=HistoryOrderGetTicket(initialHistory-3);
-   
-   trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
-  }
+    }
 //+------------------------------------------------------------------+
 
 void OnTesterDeinit()
@@ -332,10 +332,10 @@ else
 
 {
 Alert("Error: ", err);
-if(err==4 || err==137 ||err==146 || err==136 || err==138) //Busy errors
+if(err==4 || err==137 ||err==146 || err==136 || err==138||err==4756) //Busy errors
 
 {
-
+ResetLastError();
 Sleep(5000);
 
 continue;
@@ -380,10 +380,10 @@ else
 {
 Alert("Error: ", err);
 
-if(err==4 || err==137 ||err==146 || err==136|| err==138) //Busy errors
+if(err==4 || err==137 ||err==146 || err==136|| err==138||err==4756) //Busy errors
 
 {
-
+ResetLastError();
 Sleep(5000);
 
 continue;
