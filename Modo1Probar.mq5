@@ -19,30 +19,84 @@ CTrade trade;
 int initialHistory;
 ulong lastTicket;
 ulong secondlastTicket;
-
+ulong currentTicket;
+ string currentType;
+ string lastTicketType;
+ string secondTicketType;
+ 
 void updateBidAsk(){
    Ask=NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK), _Digits);
    Bid=NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
 }
+void updateHistory(){
+    HistorySelect(0,TimeCurrent());
+}
+
+string findType(ulong ticket){
+  string type;
+  if(HistoryOrderSelect(ticket)){
+   type= EnumToString(ENUM_ORDER_TYPE(HistoryOrderGetInteger(ticket, ORDER_TYPE)));
+  }
+  updateHistory();
+  return type;
+ }
+ 
+ string findReason(ulong ticket){
+  string reason;
+  if(HistoryOrderSelect(reason)){
+   reason= EnumToString(ENUM_ORDER_REASON(HistoryOrderGetInteger(ticket, ORDER_REASON)));
+  }
+  updateHistory();
+  return reason;
+ }
+ 
+ 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
 //---
-//BACKTESTING
-   //if(PositionsTotal()==0){
-  //  trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
-   //}
-   
-   updateBidAsk();
    HistorySelect(0,TimeCurrent());
    initialHistory=HistoryOrdersTotal();
-   lastTicket=HistoryOrderGetTicket(initialHistory-1);
-   secondlastTicket=HistoryOrderGetTicket(initialHistory-3);
-   //Alert(lastTicket, " ", secondlastTicket);
+   
+   if (PositionsTotal()>0){
+   
+   currentTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-1);
+   currentType = findType(currentTicket);
+   //Alert("Current: ", currentTicket, " ", currentType); 
+   
+   updateHistory();
+   lastTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-3);
+   lastTicketType = findType(lastTicket);
+   //Alert("Last: ", lastTicket, " ", lastTicketType); 
+
+   
+   updateHistory();
+   secondlastTicket=HistoryOrderGetTicket(initialHistory-5);
+   secondTicketType = findType(secondlastTicket);
+   //Alert("Second last: ", secondlastTicket, " ", secondTicketType); 
+   } 
+   else{
+   
+   lastTicket=HistoryOrderGetTicket(initialHistory-2);
+   lastTicketType = findType(lastTicket);
+   //Alert("Last: ", lastTicket, " ", lastTicketType); 
+
+   secondlastTicket=HistoryOrderGetTicket(initialHistory-4);
+   secondTicketType = findType(secondlastTicket);
+   //Alert("Second last: ", secondlastTicket, " ", secondTicketType); 
+
+   }
+   updateHistory();
+  // Alert("Current: ", currentTicket, " ", currentType);
+   //Alert("Last: ", lastTicket, " ", lastTicketType);
+   //Alert("Second last: ", secondlastTicket, " ", secondTicketType);
+
    return(INIT_SUCCEEDED);
   }
+  
+
 //+------------------------------------------------------------------+
 //| Expert deinitialization function                                 |
 //+------------------------------------------------------------------+
@@ -57,10 +111,20 @@ void OnDeinit(const int reason)
 void OnTick()
   {
 //---
-   HistorySelect(0,TimeCurrent());
+   if(PositionsTotal()>0&&PositionGetTicket(0)!=currentTicket){
+   currentTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-1);
+   currentType = findType(currentTicket);
+   Alert("Current: ", currentTicket, " ", currentType); 
+   lastTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-3);
+   lastTicketType = findType(lastTicket);
+   Alert("Last: ", lastTicket, " ", lastTicketType); 
+   secondlastTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-5);
+   secondTicketType = findType(secondlastTicket);
+   Alert("Second last: ", secondlastTicket, " ", secondTicketType); 
+   }
+
    if(HistoryOrdersTotal()>initialHistory&&PositionsTotal()==0){
-   secondlastTicket=lastTicket;
-   lastTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-1);
+   
  // Alert("New closed deal. Ticket: ", lastTicket, " Second: ", secondlastTicket);
  
  //AQUI TIENES QUE PASAR COMO PARAMETRO QUE MODO SE VA A APLICAR
@@ -76,12 +140,11 @@ void OnTick()
 //+------------------------------------------------------------------+
 void OnTrade()
   {
-  
+
   }
 //+------------------------------------------------------------------+
 //| TradeTransaction function                                        |
 ENUM_ORDER_TYPE orderType;
-ENUM_ORDER_TYPE PreviousorderType;
 //+------------------------------------------------------------------+
 void OnTradeTransaction(const MqlTradeTransaction& trans,
                         const MqlTradeRequest& request,
@@ -94,7 +157,6 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
    int positions = PositionsTotal();
 
   if(trans_type==TRADE_TRANSACTION_ORDER_ADD){
-    PreviousorderType=(ENUM_ORDER_TYPE)orderType;
     orderType=(ENUM_ORDER_TYPE)order_type;
      }
    if(req_order==ORDER_STATE_PLACED&&trans_type==TRADE_TRANSACTION_REQUEST&&
@@ -155,43 +217,58 @@ string GetOrderType(long type)
   }
   
   void DealClosed(string modo){
-  ENUM_ORDER_REASON lastTicketType = HistoryOrderGetInteger(lastTicket, ORDER_REASON);
-  ENUM_ORDER_REASON secondTicketType = HistoryOrderGetInteger(secondlastTicket, ORDER_REASON);
-  
+  updateHistory();
+  ulong closedTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-1);
+  ENUM_ORDER_REASON ticketReason = HistoryOrderGetInteger(closedTicket, ORDER_REASON);
+  ulong LastclosedTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-3);
+ ENUM_ORDER_REASON lastTicketReason = HistoryOrderGetInteger(LastclosedTicket, ORDER_REASON);
+  Alert("Closed: ",closedTicket, " ", LastclosedTicket, " ", lastTicketType);
+
+
+  Alert("Reason: ", EnumToString(ticketReason), "Last reason: ", EnumToString(lastTicketReason));
   updateBidAsk();
   //Modo 1
   if(modo=="modo1"){
   
   updateBidAsk();
   
-    if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_TP&&secondTicketType!=ORDER_REASON_TP){
+    if(orderType==ORDER_TYPE_SELL&&ticketReason==ORDER_REASON_TP&&lastTicketReason!=ORDER_REASON_TP){
   Alert("BUY & TP ", trade.RequestActionDescription());
-  trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+  placeBuyOrder();
   }
-  if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_SL){
+  if(orderType==ORDER_TYPE_SELL&&ticketReason==ORDER_REASON_SL){
   Alert("BUY & SL ", trade.RequestActionDescription());
-  trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
+  placeSellOrder();
   }
-  if(orderType==ORDER_TYPE_BUY&&lastTicketType==ORDER_REASON_TP&&secondTicketType!=ORDER_REASON_TP){
+  if(orderType==ORDER_TYPE_BUY&&ticketReason==ORDER_REASON_TP&&lastTicketReason!=ORDER_REASON_TP){
   Alert("SELL & TP ", trade.RequestActionDescription());
-  trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
+  placeSellOrder();
   }
-  if(orderType==ORDER_TYPE_BUY&&lastTicketType==ORDER_REASON_SL){
+  if(orderType==ORDER_TYPE_BUY&&ticketReason==ORDER_REASON_SL){
   Alert("SELL & SL ", trade.RequestActionDescription());
-  trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+   placeBuyOrder();
   }
   };
 
-  //NO FUNCTIONA EL PREVIOUS!!!
-  if(orderType==ORDER_TYPE_SELL&&lastTicketType==ORDER_REASON_TP&&secondTicketType==ORDER_REASON_TP
-  &&PreviousorderType==ORDER_TYPE_BUY){
+  if(orderType==ORDER_TYPE_SELL&&ticketReason==ORDER_REASON_TP&&lastTicketReason==ORDER_REASON_TP&&
+  lastTicketType=="ORDER_TYPE_BUY"){
   Alert("BUY & 2XTP");
-  trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
+  placeSellOrder();
   }
-  if(orderType==ORDER_TYPE_BUY&&lastTicketType==ORDER_REASON_TP&&secondTicketType==ORDER_REASON_TP
-  &&PreviousorderType==ORDER_TYPE_SELL){
+  if(orderType==ORDER_TYPE_SELL&&ticketReason==ORDER_REASON_TP&&lastTicketReason==ORDER_REASON_TP&&
+  lastTicketType=="ORDER_TYPE_SELL"){
+  Alert("BUY & TP");
+  placeBuyOrder();
+  }
+  if(orderType==ORDER_TYPE_BUY&&ticketReason==ORDER_REASON_TP&&lastTicketReason==ORDER_REASON_TP&&
+  lastTicketType=="ORDER_TYPE_BUY"){
+  Alert("SELL & TP");
+  placeSellOrder();
+  }
+  if(orderType==ORDER_TYPE_BUY&&ticketReason==ORDER_REASON_TP&&lastTicketReason==ORDER_REASON_TP&&
+  lastTicketType=="ORDER_TYPE_SELL"){
    Alert("SELL & 2XTP");
-  trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+  placeBuyOrder();
   }
   
   
@@ -232,3 +309,97 @@ void OnTesterDeinit()
    
   }
 //+------------------------------------------------------------------+
+
+void placeBuyOrder(){
+int err=0;
+int c = 0;
+int NumberOfTries=5;
+
+ for(c = 0 ; c < NumberOfTries ; c++){
+  updateBidAsk();
+   trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+   err=GetLastError();
+
+if(err==0)
+
+{
+
+break;
+
+}
+
+else
+
+{
+Alert("Error: ", err);
+if(err==4 || err==137 ||err==146 || err==136 || err==138) //Busy errors
+
+{
+
+Sleep(5000);
+
+continue;
+
+}
+
+else //normal error
+
+{
+
+break;
+
+}
+
+}
+
+}
+
+}
+  
+  void placeSellOrder(){
+  
+int err=0;
+int c = 0;
+int NumberOfTries=5;
+
+ for(c = 0 ; c < NumberOfTries ; c++){
+  updateBidAsk();
+ trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
+   err=GetLastError();
+
+if(err==0)
+
+{
+
+break;
+
+}
+
+else
+
+{
+Alert("Error: ", err);
+
+if(err==4 || err==137 ||err==146 || err==136|| err==138) //Busy errors
+
+{
+
+Sleep(5000);
+
+continue;
+
+}
+
+else //normal error
+
+{
+
+break;
+
+}
+
+}
+
+}
+
+}
