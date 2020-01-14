@@ -117,13 +117,13 @@ void OnTick()
    if(PositionsTotal()>0&&PositionGetTicket(0)!=currentTicket){
    currentTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-1);
    currentType = findType(currentTicket);
-   Alert("Current: ", currentTicket, " ", currentType); 
+ //  Alert("Current: ", currentTicket, " ", currentType); 
    lastTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-3);
    lastTicketType = findType(lastTicket);
-   Alert("Last: ", lastTicket, " ", lastTicketType); 
+ //  Alert("Last: ", lastTicket, " ", lastTicketType); 
    secondlastTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-5);
    secondTicketType = findType(secondlastTicket);
-   Alert("Second last: ", secondlastTicket, " ", secondTicketType); 
+ //  Alert("Second last: ", secondlastTicket, " ", secondTicketType); 
    }
 
    if(HistoryOrdersTotal()>initialHistory&&PositionsTotal()==0){
@@ -172,7 +172,7 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
     
     Alert("Type: ",EnumToString(orderType));
     if(request.sl==0.00000&&request.tp==0.00000){
-          trade.PositionModify(ticket, sl, tp);
+         // trade.PositionModify(ticket, sl, tp);
     }
 
 
@@ -190,7 +190,7 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
     Alert("Type: ",EnumToString(orderType));
     
         if(request.sl==0.00000&&request.tp==0.00000){
-    trade.PositionModify(ticket, sl, tp);
+//    trade.PositionModify(ticket, sl, tp);
          }
       } 
    
@@ -317,8 +317,12 @@ int NumberOfTries=5;
 
  for(c = 0 ; c < NumberOfTries ; c++){
   updateBidAsk();
-   trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
-   err=GetLastError();
+  updateHistory();
+  if(PositionsTotal()==0){
+    trade.Buy(volume, NULL, Ask,((Ask)-(StopLoss*_Point)),((Ask)+(TakeProfit*_Point)),NULL);
+
+  }
+    err=GetLastError();
 
 if(err==0)
 
@@ -335,9 +339,9 @@ Alert("Error: ", err);
 if(err==4 || err==137 ||err==146 || err==136 || err==138||err==4756) //Busy errors
 
 {
-ResetLastError();
-Sleep(5000);
 
+Sleep(5000);
+ResetLastError();
 continue;
 
 }
@@ -364,7 +368,10 @@ int NumberOfTries=5;
 
  for(c = 0 ; c < NumberOfTries ; c++){
   updateBidAsk();
+  updateHistory();
+    if(PositionsTotal()==0){
  trade.Sell(volume, NULL, Bid,((Bid)+(StopLoss*_Point)),((Bid)-(TakeProfit*_Point)),NULL);
+ }
    err=GetLastError();
 
 if(err==0)
@@ -383,9 +390,9 @@ Alert("Error: ", err);
 if(err==4 || err==137 ||err==146 || err==136|| err==138||err==4756) //Busy errors
 
 {
-ResetLastError();
-Sleep(5000);
 
+Sleep(5000);
+ResetLastError();
 continue;
 
 }
