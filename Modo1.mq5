@@ -336,7 +336,7 @@ else
 
 {
 Alert("Error: ", err);
-if(err==4 || err==137 ||err==146 || err==136 || err==138||err==4756) //Busy errors
+if(err==4 || err==137 ||err==146 || err==136 || err==138||err==4752||err==4756) //Busy errors
 
 {
 
@@ -387,7 +387,7 @@ else
 {
 Alert("Error: ", err);
 
-if(err==4 || err==137 ||err==146 || err==136|| err==138||err==4756) //Busy errors
+if(err==4 || err==137 ||err==146 || err==136|| err==138||err==4756||err==4752) //Busy errors
 
 {
 
