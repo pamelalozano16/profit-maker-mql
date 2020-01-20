@@ -29,7 +29,9 @@ void updateBidAsk(){
    Bid=NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID), _Digits);
 }
 void updateHistory(){
-    HistorySelect(0,TimeCurrent());
+   datetime end=TimeCurrent();                 // current server time
+   datetime start=end-PeriodSeconds(PERIOD_D1);
+    HistorySelect(start,end);
 }
 
 string findType(ulong ticket){
@@ -43,7 +45,7 @@ string findType(ulong ticket){
  
  string findReason(ulong ticket){
   string reason;
-  if(HistoryOrderSelect(reason)){
+  if(HistoryOrderSelect(ticket)){
    reason= EnumToString(ENUM_ORDER_REASON(HistoryOrderGetInteger(ticket, ORDER_REASON)));
   }
   updateHistory();
@@ -56,12 +58,24 @@ string findType(ulong ticket){
 //+------------------------------------------------------------------+
 int OnInit()
   {
+  updateHistory();
+  ulong tickt=HistoryOrderGetTicket(0);
+  string sym;
+   HistoryOrderSelect(tickt);
+   sym=HistoryOrderGetString(tickt, ORDER_SYMBOL);
+  Operation EUR_USD;
+  AssignOp(sym, EUR_USD);
+  Alert("c: ", EUR_USD.current, " ",EUR_USD.ct);
+  Alert("l: ", EUR_USD.last, " ", EUR_USD.lt);
+  Alert("s: ", EUR_USD.second, " ", EUR_USD.st);
 //---
+   updateHistory();
    if(GetLastError()>0){
    Alert("Error: ", GetLastError());
    }
-   HistorySelect(0,TimeCurrent());
+   updateHistory();
    initialHistory=HistoryOrdersTotal();
+   Alert("Initial History: ", initialHistory);
    
    if (PositionsTotal()>0){
    
@@ -409,4 +423,61 @@ break;
 
 }
 
+}
+
+struct Operation{
+ulong current;
+ulong last;
+ulong second;
+string symbol;
+string ct;
+string lt;
+string st;
+};
+
+void AssignOp(string symbol, Operation &EUR_USD){
+EUR_USD.symbol=symbol;
+updateHistory();
+int size= HistoryOrdersTotal();
+ulong arr[];
+ArrayResize(arr,size);
+int j, i;
+   for(i=(HistoryOrdersTotal()-1), j=0;i>=0;i--){
+   updateHistory();
+   ulong t= HistoryOrderGetTicket(i);
+   if(HistoryOrderSelect(t)){
+   if(symbol==(HistoryOrderGetString(t, ORDER_SYMBOL))){
+   arr[j]=t;
+   //Alert(arr[j]);
+    j++;
+   };
+  }
+   };
+    updateHistory();
+    Alert(j);
+//ARR tiene toda la historia de tickets con ese simbolo. La posicion cero tiene el mas reciente.
+  bool active;
+  for(i=0;i<PositionsTotal();i++){
+  string sym=PositionGetSymbol(i);
+ // Alert(sym);
+  if(symbol==sym){
+   active=true;
+   }
+  };
+
+  if(active){
+  EUR_USD.current=arr[0];
+  EUR_USD.ct=findType(EUR_USD.current);
+  EUR_USD.last=arr[2];
+  EUR_USD.lt=findType(EUR_USD.last);
+  EUR_USD.second=arr[4];
+  EUR_USD.st=findType(EUR_USD.second);
+  }else if(!active){
+  EUR_USD.current=0;
+  //EUR_USD.ct=findType(EUR_USD.current);
+  EUR_USD.last=arr[1];
+  EUR_USD.lt=findType(EUR_USD.last);
+  EUR_USD.second=arr[3];
+  EUR_USD.st=findType(EUR_USD.second);
+  } 
 }

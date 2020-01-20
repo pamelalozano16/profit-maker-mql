@@ -20,6 +20,7 @@ int initialHistory;
 ulong lastTicket;
 ulong secondlastTicket;
 ulong currentTicket;
+ulong initialTicket=0;
  string currentType;
  string lastTicketType;
  string secondTicketType;
@@ -43,7 +44,7 @@ string findType(ulong ticket){
  
  string findReason(ulong ticket){
   string reason;
-  if(HistoryOrderSelect(reason)){
+  if(HistoryOrderSelect(ticket)){
    reason= EnumToString(ENUM_ORDER_REASON(HistoryOrderGetInteger(ticket, ORDER_REASON)));
   }
   updateHistory();
@@ -57,17 +58,23 @@ string findType(ulong ticket){
 int OnInit()
   {
 //---
+
+   Alert(TimeCurrent());
+   Alert(TimeCurrent()-__DATE__);
+
    if(GetLastError()>0){
    Alert("Error: ", GetLastError());
    }
    HistorySelect(0,TimeCurrent());
    initialHistory=HistoryOrdersTotal();
-   
+  // Alert("Initial History: ", initialHistory);
    if (PositionsTotal()>0){
    
    currentTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-1);
    currentType = findType(currentTicket);
    //Alert("Current: ", currentTicket, " ", currentType); 
+   initialTicket=currentTicket;
+   Alert(initialTicket);
    
    updateHistory();
    lastTicket=HistoryOrderGetTicket(HistoryOrdersTotal()-3);
@@ -111,6 +118,9 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
+
+ENUM_ORDER_TYPE orderType;
+
 void OnTick()
   {
 //---
@@ -125,15 +135,20 @@ void OnTick()
    secondTicketType = findType(secondlastTicket);
  //  Alert("Second last: ", secondlastTicket, " ", secondTicketType); 
    }
-
-   if(HistoryOrdersTotal()>initialHistory&&PositionsTotal()==0){
-   
+  // Alert("History Orders total: ", HistoryOrdersTotal());
+   if((HistoryOrdersTotal()>initialHistory&&PositionsTotal()==0)||
+   (initialTicket>0&&PositionsTotal()==0)){
+   if(initialTicket>0){
+   orderType=ENUM_ORDER_TYPE(StringToEnum(findType(initialTicket), orderType));
+   }
  // Alert("New closed deal. Ticket: ", lastTicket, " Second: ", secondlastTicket);
  
  //AQUI TIENES QUE PASAR COMO PARAMETRO QUE MODO SE VA A APLICAR
  
    DealClosed("modo1");
    initialHistory=HistoryOrdersTotal();
+   //INITIAL TICKET
+   initialTicket=0;
    }
 
    
@@ -147,7 +162,7 @@ void OnTrade()
   }
 //+------------------------------------------------------------------+
 //| TradeTransaction function                                        |
-ENUM_ORDER_TYPE orderType;
+
 //+------------------------------------------------------------------+
 void OnTradeTransaction(const MqlTradeTransaction& trans,
                         const MqlTradeRequest& request,
@@ -255,7 +270,7 @@ string GetOrderType(long type)
   Alert("SELL & SL ", trade.RequestActionDescription());
    placeBuyOrder();
   }
-  };
+
 
   if(orderType==ORDER_TYPE_SELL&&ticketReason==ORDER_REASON_TP&&lastTicketReason==ORDER_REASON_TP&&
   lastTicketType=="ORDER_TYPE_BUY"){
@@ -278,7 +293,8 @@ string GetOrderType(long type)
   placeBuyOrder();
   }
   
-  
+    };
+    //END OF FUNCTION DEAL CLOSED
   //Alert(EnumToString(lastTicketType), " " , EnumToString(secondTicketType));
   }
   
@@ -336,7 +352,7 @@ else
 
 {
 Alert("Error: ", err);
-if(err==4 || err==137 ||err==146 || err==136 || err==138||err==4756) //Busy errors
+if(err==4 || err==137 ||err==146 || err==136 || err==138||err==4756||err==4752) //Busy errors
 
 {
 
@@ -387,7 +403,7 @@ else
 {
 Alert("Error: ", err);
 
-if(err==4 || err==137 ||err==146 || err==136|| err==138||err==4756) //Busy errors
+if(err==4 || err==137 ||err==146 || err==136|| err==138||err==4756||err==4752) //Busy errors
 
 {
 
@@ -410,3 +426,13 @@ break;
 }
 
 }
+
+template<typename T>
+T StringToEnum(string str,T enu)
+  {
+   for(int i=0;i<256;i++)
+      if(EnumToString(enu=(T)i)==str)
+         return(enu);
+//---
+   return(-1);
+  }
