@@ -79,11 +79,9 @@ void OnTrade()
   {
 //---     
 
-          AssignOp(GBP_USD);
-   if(HistoryDealsTotal()>currentHistory&&!GBP_USD.active){
-   Alert("Deal Closed");
+          
    }
-  }
+  
 //+------------------------------------------------------------------+
 //| TradeTransaction function                                        |
 //+------------------------------------------------------------------+
@@ -92,7 +90,15 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
                         const MqlTradeResult& result)
   {
 //---
-
+         MqlTradeCheckResult checkResult;
+         bool success = OrderCheck(request, checkResult);
+         if(success){
+            AssignOp(GBP_USD);
+            if(HistoryDealsTotal()>currentHistory&&!GBP_USD.active){
+            Alert("Deal Closed");
+                    }            
+                     }
+         
   }
 //+------------------------------------------------------------------+
 
