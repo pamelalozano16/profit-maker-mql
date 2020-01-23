@@ -32,16 +32,18 @@ bool active;
 //--- Global parameters
 Operation GBP_USD;
 int currentHistory;
+bool tradeOver=false;
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
   {
 //---
+   Alert("START");
    //Initialize current history;
    updateHistory();
    currentHistory=HistoryOrdersTotal();
-   
+
    //Initialize Operation
    getHistory(GBP_USD);
    GBP_USD.symbol=Symbol();
@@ -50,7 +52,7 @@ int OnInit()
    GBP_USD.last=0;
    GBP_USD.second=0;
    AssignOp(GBP_USD);
-     
+
 //---
    return(INIT_SUCCEEDED);
   }
@@ -60,7 +62,7 @@ int OnInit()
 void OnDeinit(const int reason)
   {
 //---
-   
+
   }
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
@@ -68,9 +70,16 @@ void OnDeinit(const int reason)
 void OnTick()
   {
 //---
+
+   if(tradeOver){
+      AssignOp(GBP_USD);
+   if(HistoryDealsTotal()>currentHistory&&!GBP_USD.active){
+   Alert("Deal Closed");
+      }
+      tradeOver=false;
+   }
    updateHistory();
    currentHistory=HistoryOrdersTotal();
-   
   }
 //+------------------------------------------------------------------+
 //| Trade function                                                   |
@@ -78,10 +87,9 @@ void OnTick()
 void OnTrade()
   {
 //---     
+      tradeOver=true;
 
-          
-   }
-  
+  }
 //+------------------------------------------------------------------+
 //| TradeTransaction function                                        |
 //+------------------------------------------------------------------+
@@ -90,15 +98,7 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
                         const MqlTradeResult& result)
   {
 //---
-         MqlTradeCheckResult checkResult;
-         bool success = OrderCheck(request, checkResult);
-         if(success){
-            AssignOp(GBP_USD);
-            if(HistoryDealsTotal()>currentHistory&&!GBP_USD.active){
-            Alert("Deal Closed");
-                    }            
-                     }
-         
+
   }
 //+------------------------------------------------------------------+
 
@@ -127,8 +127,8 @@ void getHistory(Operation &GBP_USD){
 void AssignOp(Operation &GBP_USD){
    checkIfActive(GBP_USD);
    updateHistory();
-
    getHistory(GBP_USD);
+   
    if(GBP_USD.active){
    GBP_USD.current=GBP_USD.history[0];
    GBP_USD.ct=findType(GBP_USD.current);
@@ -192,4 +192,4 @@ string findType(ulong ticket){
   }
   updateHistory();
   return type;
- }
+ } 
