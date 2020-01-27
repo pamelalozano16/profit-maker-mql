@@ -1,12 +1,12 @@
 //+------------------------------------------------------------------+
-//|                                                     PruebaGU.mq5 |
+//|                                                     PruebaEU.mq5 |
 //|                        Copyright 2020, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
 //--- input parameters
-input int      GUStopLoss;
-input int      GUTakeProfit;
-input double   GUvolume;
+input int      EUStopLoss;
+input int      EUTakeProfit;
+input double   EUvolume;
 
 //+------------------------------------------------------------------+
 //| Operation Struct                                                 |
@@ -30,7 +30,7 @@ bool active;
 ///
 ///
 //--- Global parameters
-Operation GBP_USD;
+Operation EUR_USD;
 int currentHistory;
 bool tradeOver=false;
 //+------------------------------------------------------------------+
@@ -45,13 +45,13 @@ int OnInit()
    currentHistory=HistoryOrdersTotal();
 
    //Initialize Operation
-   getHistory(GBP_USD);
-   GBP_USD.symbol=Symbol();
-   GBP_USD.current=0;
-   GBP_USD.open=1;
-   GBP_USD.last=0;
-   GBP_USD.second=0;
-   AssignOp(GBP_USD);
+   getHistory(EUR_USD);
+   EUR_USD.symbol=Symbol();
+   EUR_USD.current=0;
+   EUR_USD.open=1;
+   EUR_USD.last=0;
+   EUR_USD.second=0;
+   AssignOp(EUR_USD);
 
 //---
    return(INIT_SUCCEEDED);
@@ -72,13 +72,13 @@ void OnTick()
 //---
 
    if(tradeOver){
-      int history=searchHistory(GBP_USD);
-      checkIfActive(GBP_USD);
-     // Alert(history, " ",GBP_USD.historySize);
-   if(history>GBP_USD.historySize&&!GBP_USD.active){
+      int history=searchHistory(EUR_USD);
+      checkIfActive(EUR_USD);
+      //Alert(history, " ",EUR_USD.historySize);
+   if(history>EUR_USD.historySize&&!EUR_USD.active){
    Alert("Deal Closed");
       }
-     AssignOp(GBP_USD);
+     AssignOp(EUR_USD);
       tradeOver=false;
    }
    updateHistory();
@@ -112,26 +112,26 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
 //+------------------------------------------------------------------+
 //| EA functions                                      |
 //+------------------------------------------------------------------+
-void getHistory(Operation &GBP_USD){
+void getHistory(Operation &EUR_USD){
    updateHistory();
    int i, j;
-   ArrayResize(GBP_USD.history, HistoryOrdersTotal());
+   ArrayResize(EUR_USD.history, HistoryOrdersTotal());
    for(i=HistoryOrdersTotal()-1, j=0;i>=0;i--){
       updateHistory();
       ulong ticket=HistoryOrderGetTicket(i);
       if(HistoryOrderSelect(ticket)){
          if(HistoryOrderGetString(ticket, ORDER_SYMBOL)==Symbol()){
-           GBP_USD.history[j]=ticket;
+           EUR_USD.history[j]=ticket;
            j++;
          }
       }
    }
-   ArrayResize(GBP_USD.history, (j+1));
-   GBP_USD.historySize=j+1;
+   ArrayResize(EUR_USD.history, (j+1));
+   EUR_USD.historySize=j+1;
 }
 
 //+------------------------------------------------------------------+
-int searchHistory(Operation &GBP_USD){
+int searchHistory(Operation &EUR_USD){
    updateHistory();
    int i, j;
    for(i=HistoryOrdersTotal()-1, j=0;i>=0;i--){
@@ -147,47 +147,47 @@ int searchHistory(Operation &GBP_USD){
    return j+1;
 }
 
-void AssignOp(Operation &GBP_USD){
-   checkIfActive(GBP_USD);
+void AssignOp(Operation &EUR_USD){
+   checkIfActive(EUR_USD);
    updateHistory();
-    getHistory(GBP_USD);
+    getHistory(EUR_USD);
    
 
    
-   if(GBP_USD.active){
-   GBP_USD.current=GBP_USD.history[0];
-   GBP_USD.ct=findType(GBP_USD.current);
-   GBP_USD.last=GBP_USD.history[2];
-   GBP_USD.second=GBP_USD.history[4];
-   GBP_USD.lt=findType(GBP_USD.last);
-   GBP_USD.st=findType(GBP_USD.second);
-   PrintOp(GBP_USD);
+   if(EUR_USD.active){
+   EUR_USD.current=EUR_USD.history[0];
+   EUR_USD.ct=findType(EUR_USD.current);
+   EUR_USD.last=EUR_USD.history[2];
+   EUR_USD.second=EUR_USD.history[4];
+   EUR_USD.lt=findType(EUR_USD.last);
+   EUR_USD.st=findType(EUR_USD.second);
+   PrintOp(EUR_USD);
    }
-   if(!GBP_USD.active){
-   GBP_USD.current=0;
-   GBP_USD.ct=NULL;
-   GBP_USD.open=0;
-   GBP_USD.last=GBP_USD.history[1];
-   GBP_USD.second=GBP_USD.history[3];
-   GBP_USD.lt=findType(GBP_USD.last);
-   GBP_USD.st=findType(GBP_USD.second);
-   PrintOp(GBP_USD);
+   if(!EUR_USD.active){
+   EUR_USD.current=0;
+   EUR_USD.ct=NULL;
+   EUR_USD.open=0;
+   EUR_USD.last=EUR_USD.history[1];
+   EUR_USD.second=EUR_USD.history[3];
+   EUR_USD.lt=findType(EUR_USD.last);
+   EUR_USD.st=findType(EUR_USD.second);
+   PrintOp(EUR_USD);
    }
 }
 
-void checkIfActive(Operation &GBP_USD){
-string symbol=GBP_USD.symbol;
+void checkIfActive(Operation &EUR_USD){
+string symbol=EUR_USD.symbol;
 int i;
 
   for(i=0;i<PositionsTotal()+1;i++){
   string sym=PositionGetSymbol(i);
  // Alert(sym);
-  if(GBP_USD.symbol==sym){
-   GBP_USD.open=PositionGetTicket(i);
-   GBP_USD.active=true;
+  if(EUR_USD.symbol==sym){
+   EUR_USD.open=PositionGetTicket(i);
+   EUR_USD.active=true;
    break;
    }else{
-   GBP_USD.active=false;
+   EUR_USD.active=false;
    }
   };
 
@@ -202,12 +202,12 @@ void updateHistory(){
    HistorySelect(start,end);
 }
 
-void PrintOp(Operation &GBP_USD){
-  Alert(GBP_USD.symbol);
-  Alert("Open: ", GBP_USD.open);
-  Alert("c: ", GBP_USD.current, " ",GBP_USD.ct);
-  Alert("l: ", GBP_USD.last, " ", GBP_USD.lt);
-  Alert("s: ", GBP_USD.second, " ", GBP_USD.st);
+void PrintOp(Operation &EUR_USD){
+  Alert(EUR_USD.symbol);
+  Alert("Open: ", EUR_USD.open);
+  Alert("c: ", EUR_USD.current, " ",EUR_USD.ct);
+  Alert("l: ", EUR_USD.last, " ", EUR_USD.lt);
+  Alert("s: ", EUR_USD.second, " ", EUR_USD.st);
 
 }
 string findType(ulong ticket){
